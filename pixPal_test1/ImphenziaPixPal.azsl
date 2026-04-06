@@ -1,5 +1,11 @@
 #pragma once
 
+ShaderResourceGroupSemantic PixPalPerMaterialSemantic
+{
+    FrequencyId = 2;
+    ShaderVariantFallback = 128;
+}
+
 #include <Atom/Features/SrgSemantics.azsli>
 
 #include <scenesrg_all.srgi>
@@ -8,7 +14,7 @@
 #include <Atom/Features/InstancedTransforms.azsli>
 #include <Atom/Features/Pipeline/Forward/ForwardPassOutput.azsli>
 
-ShaderResourceGroup PixPalSrg : SRG_PerMaterial
+ShaderResourceGroup PixPalSrg : PixPalPerMaterialSemantic
 {
     Texture2D m_paletteTexture;
     Texture2D m_attributesTexture;
@@ -56,6 +62,7 @@ ForwardPassOutput MainPS(VertexShaderOutput IN)
 {
     ForwardPassOutput OUT;
     
+    // Sample with nearest-neighbor (pixel-art perfect)
     float4 paletteColor  = PixPalSrg::m_paletteTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
     float4 attributes    = PixPalSrg::m_attributesTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
     float4 emissionColor = PixPalSrg::m_emissionTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
@@ -64,6 +71,7 @@ ForwardPassOutput MainPS(VertexShaderOutput IN)
     float metallicFactor  = attributes.g;   // unused in this simple forward pass (extendable)
     float roughnessFactor = attributes.b;   // unused in this simple forward pass (extendable)
     
+    // === Animated Neon (exact Blender node group behavior) ===
     float time = SceneSrg::m_time * PixPalSrg::m_animationSpeed;
     
     float3 animatedOffset = IN.m_worldPos * float3(0.03, 0.035, 0.0);
