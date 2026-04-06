@@ -1,0 +1,77 @@
+{
+    "description": "Imphenzia PixPal stylized palette material (ported from Blender). Supports palette coloring, attributes (metallic/roughness/animation), animated neon emission.",
+    "version": 3,
+    "shaders": [
+        {
+            "file": "./ImphenziaPixPal.shader"
+        }
+    ],
+    "propertyLayout": {
+        "groups": [
+            {
+                "id": "textures",
+                "displayName": "Textures"
+            },
+            {
+                "id": "animation",
+                "displayName": "Animation"
+            }
+        ],
+        "properties": {
+            "textures": [
+                {
+                    "id": "paletteTexture",
+                    "displayName": "Palette Texture (Base Color)",
+                    "type": "Image",
+                    "defaultValue": "",
+                    "connection": {
+                        "type": "ShaderInput",
+                        "id": "m_paletteTexture"
+                    }
+                },
+                {
+                    "id": "attributesTexture",
+                    "displayName": "Attributes Texture",
+                    "type": "Image",
+                    "defaultValue": "",
+                    "connection": {
+                        "type": "ShaderInput",
+                        "id": "m_attributesTexture"
+                    }
+                },
+                {
+                    "id": "emissionTexture",
+                    "displayName": "Emission Texture",
+                    "type": "Image",
+                    "defaultValue": "",
+                    "connection": {
+                        "type": "ShaderInput",
+                        "id": "m_emissionTexture"
+                    }
+                }
+            ],
+            "animation": [
+                {
+                    "id": "animationSpeed",
+                    "displayName": "Animation Speed",
+                    "type": "Float",
+                    "defaultValue": 2.0,
+                    "connection": {
+                        "type": "ShaderInput",
+                        "id": "m_animationSpeed"
+                    }
+                },
+                {
+                    "id": "neonStrength",
+                    "displayName": "Neon Strength",
+                    "type": "Float",
+                    "defaultValue": 1.5,
+                    "connection": {
+                        "type": "ShaderInput",
+                        "id": "m_neonStrength"
+                    }
+                }
+            ]
+        }
+    }
+}
