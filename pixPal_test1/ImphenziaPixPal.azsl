@@ -5,8 +5,14 @@ ShaderResourceGroupSemantic PixPalPerMaterialSemantic
     FrequencyId = 2;
     ShaderVariantFallback = 128;
 }
+/// #32 error, duplicate
+// ShaderResourceGroupSemantic SRG_PerMaterial
+// {
+//     FrequencyId = 2;
+//     ShaderVariantFallback = 128;   // This designates this SRG as the fallback owner
+// }
 
-#include <Atom/Features/SrgSemantics.azsli>
+#include <Atom/Features/SrgSemantics.azsli> /// leaving just this gives #129 error, no ShaderVariantFallback
 
 #include <scenesrg_all.srgi>
 #include <viewsrg_all.srgi>
@@ -14,7 +20,7 @@ ShaderResourceGroupSemantic PixPalPerMaterialSemantic
 #include <Atom/Features/InstancedTransforms.azsli>
 #include <Atom/Features/Pipeline/Forward/ForwardPassOutput.azsli>
 
-ShaderResourceGroup PixPalSrg : PixPalPerMaterialSemantic
+ShaderResourceGroup PixPalSrg : PixPalPerMaterialSemantic // SRG_PerMaterial /// #32 error, diplicate
 {
     Texture2D m_paletteTexture;
     Texture2D m_attributesTexture;
