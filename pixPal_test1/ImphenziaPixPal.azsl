@@ -1,26 +1,25 @@
 #pragma once
 
-ShaderResourceGroupSemantic PixPalPerMaterialSemantic
-{
-    FrequencyId = 2;
-    ShaderVariantFallback = 128;
-}
-/// #32 error, duplicate
-// ShaderResourceGroupSemantic SRG_PerMaterial
-// {
-//     FrequencyId = 2;
-//     ShaderVariantFallback = 128;   // This designates this SRG as the fallback owner
-// }
+/*
+Update Frequency:
+Frequency 0 (Scene): once per frame. e.g. SceneSrg::m_time
+Frequency 1 (View): once per camera. e.g. ViewSrg::m_viewProjectionMatrix
+Frequency 2 (Material): once per material. SRG_PerMaterial. It holds textures and values shared by any object using this exact material
+Frequency 3/4 (Object/Draw): every single time an individual mesh is drawn on screen (like its Position/Transform in the world)
+*/
 
-#include <Atom/Features/SrgSemantics.azsli> /// leaving just this gives #129 error, no ShaderVariantFallback
-
+#include <Atom/Features/SrgSemantics.azsli>
 #include <scenesrg_all.srgi>
 #include <viewsrg_all.srgi>
 #include <Atom/Features/PBR/DefaultObjectSrg.azsli>
 #include <Atom/Features/InstancedTransforms.azsli>
 #include <Atom/Features/Pipeline/Forward/ForwardPassOutput.azsli>
 
-ShaderResourceGroup PixPalSrg : PixPalPerMaterialSemantic // SRG_PerMaterial /// #32 error, diplicate
+ShaderResourceGroup PixPalDrawSrg : SRG_PerDraw
+{
+}
+
+ShaderResourceGroup PixPalSrg : SRG_PerMaterial
 {
     Texture2D m_paletteTexture;
     Texture2D m_attributesTexture;
