@@ -1,12 +1,15 @@
-#pragma once
-
 /*
+Original author of the Pixel Palette is -> https://www.youtube.com/@Imphenzia
+I just adapted Imphenzia logic to O3DE using .azsl shaders.
+
 Update Frequency:
 Frequency 0 (Scene): once per frame. e.g. SceneSrg::m_time
 Frequency 1 (View): once per camera. e.g. ViewSrg::m_viewProjectionMatrix
 Frequency 2 (Material): once per material. SRG_PerMaterial. It holds textures and values shared by any object using this exact material
 Frequency 3/4 (Object/Draw): every single time an individual mesh is drawn on screen (like its Position/Transform in the world)
 */
+
+#pragma once
 
 #include <Atom/Features/SrgSemantics.azsli>
 #include <scenesrg_all.srgi>
@@ -66,28 +69,26 @@ VertexShaderOutput MainVS(VertexShaderInput IN, uint instanceId : SV_InstanceID)
 ForwardPassOutput MainPS(VertexShaderOutput IN)
 {
     ForwardPassOutput OUT;
-    
-    // Sample with nearest-neighbor (pixel-art perfect)
-    float4 paletteColor  = PixPalSrg::m_paletteTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
-    float4 attributes    = PixPalSrg::m_attributesTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
-    float4 emissionColor = PixPalSrg::m_emissionTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
-    
-    float animationFactor = attributes.r;
-    float metallicFactor  = attributes.g;   // unused in this simple forward pass (extendable)
-    float roughnessFactor = attributes.b;   // unused in this simple forward pass (extendable)
-    
-    // === Animated Neon (exact Blender node group behavior) ===
+
+    float4 attributes = PixPalSrg::m_attributesTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
+
+    float roughnessFactor = 1.0 - attributes.r;
+    float metallicFactor  = attributes.g;
+    float animationFactor = attributes.b;
+
     float time = SceneSrg::m_time * PixPalSrg::m_animationSpeed;
-    
-    float3 animatedOffset = IN.m_worldPos * float3(0.03, 0.035, 0.0);
-    float pulse = sin(time + animatedOffset.x + animatedOffset.y) * 0.5 + 0.5;
-    
-    float3 emissive = emissionColor.rgb * PixPalSrg::m_neonStrength * animationFactor * pulse;
-    
+
+    float2 animatedUv = IN.m_uv;
+    animatedUv.y -= animationFactor * time;
+
+    float4 paletteColor  = PixPalSrg::m_paletteTexture.Sample(PixPalSrg::m_pointSampler, animatedUv);
+    float4 emissionColor = PixPalSrg::m_emissionTexture.Sample(PixPalSrg::m_pointSampler, animatedUv);
+
+    float3 emissive = emissionColor.rgb * PixPalSrg::m_neonStrength;
     float3 finalColor = paletteColor.rgb + emissive;
-    
-    OUT.m_diffuseColor = float4(finalColor, paletteColor.a);
+
+    OUT.m_diffuseColor = float4(finalColor, 1.0);
     OUT.m_specularColor = float4(0.0, 0.0, 0.0, 0.0);
-    
+
     return OUT;
 }
