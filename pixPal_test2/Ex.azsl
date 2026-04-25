@@ -1,0 +1,107 @@
+/// tried to merge psx example with imphenzia to add shadows.
+/// working so far, but the quality is still not there yet!
+
+#pragma once
+
+#include <Atom/Features/SrgSemantics.azsli>
+#include <scenesrg_all.srgi>
+#include <viewsrg_all.srgi>
+#include <Atom/Features/PBR/DefaultObjectSrg.azsli>
+#include <Atom/Features/InstancedTransforms.azsli>
+#include <Atom/Features/Pipeline/Forward/ForwardPassOutput.azsli>
+
+#define FORCE_OPAQUE 1
+#define ENABLE_SHADOWS 1
+#include <Atom/Features/Pipeline/Forward/ForwardPassSrg.azsli>
+#include <Atom/Features/Shadow/DirectionalLightShadow.azsli>
+#include <Atom/Features/Shadow/ProjectedShadow.azsli>
+
+option bool o_enableShadows = true;
+option bool o_receiveShadows = true;
+
+ShaderResourceGroup PixPalDrawSrg : SRG_PerDraw
+{
+}
+
+ShaderResourceGroup PixPalSrg : SRG_PerMaterial
+{
+    Texture2D m_baseColour;
+    Texture2D m_attributesTexture;
+    Texture2D m_emissionTexture;
+    
+    Sampler m_pointSampler;
+
+    float m_animationSpeed;
+    float m_neonStrength;
+
+    float m_shadowStrength;
+}
+
+struct VertexShaderInput
+{
+    float3 m_position : POSITION;
+    float3 m_normal   : NORMAL;
+    float2 m_uv       : UV0;
+};
+
+struct VertexShaderOutput
+{
+    float4 m_position : SV_Position;
+    float2 m_uv       : TEXCOORD0;
+    float3 m_worldPos : TEXCOORD1;
+    float3 m_normal   : TEXCOORD2;
+};
+
+VertexShaderOutput MainVS(VertexShaderInput IN, uint instanceId : SV_InstanceID)
+{
+    VertexShaderOutput OUT;
+    
+    float4x4 objectToWorld = GetObjectToWorldMatrix(instanceId);
+    float4 worldPosition4 = mul(objectToWorld, float4(IN.m_position, 1.0));
+    
+    OUT.m_position = mul(ViewSrg::m_viewProjectionMatrix, worldPosition4);
+    OUT.m_worldPos = worldPosition4.xyz;
+    OUT.m_uv = IN.m_uv;
+    
+    float3x3 objectToWorldIT = GetObjectToWorldMatrixInverseTranspose(instanceId);
+    OUT.m_normal = normalize(mul(objectToWorldIT, IN.m_normal));
+    
+    return OUT;
+}
+
+ForwardPassOutput MainPS(VertexShaderOutput IN)
+{
+    ForwardPassOutput OUT;
+
+    float4 attributes = PixPalSrg::m_attributesTexture.Sample(PixPalSrg::m_pointSampler, IN.m_uv);
+    float roughnessFactor = 1.0 - attributes.r;
+    float metallicFactor  = attributes.g;
+    float animationFactor = attributes.b;
+
+    float time = SceneSrg::m_time * PixPalSrg::m_animationSpeed;
+
+    float2 animatedUv = IN.m_uv;
+    animatedUv.y -= animationFactor * time;
+
+    float4 paletteColor  = PixPalSrg::m_baseColour.Sample(PixPalSrg::m_pointSampler, animatedUv);
+    float4 emissionColor = PixPalSrg::m_emissionTexture.Sample(PixPalSrg::m_pointSampler, animatedUv);
+
+    float shadowFactor = 1.0;
+    if (o_enableShadows && o_receiveShadows) 
+    {
+        if (SceneSrg::m_directionalLightCount > 0 && ViewSrg::m_shadowIndexDirectionalLight < SceneSrg::m_directionalLightCount) 
+        {
+            float rawShadowFactor = DirectionalLightShadow::GetVisibility(ViewSrg::m_shadowIndexDirectionalLight, IN.m_worldPos, normalize(IN.m_normal), IN.m_position);
+            
+            shadowFactor = lerp(1.0, rawShadowFactor, saturate(PixPalSrg::m_shadowStrength));
+        }
+    }
+
+    float3 emissive = emissionColor.rgb * PixPalSrg::m_neonStrength;
+    float3 finalColor = (paletteColor.rgb * shadowFactor) + emissive;
+
+    OUT.m_diffuseColor = float4(finalColor, 1.0);
+    OUT.m_specularColor = float4(0.0, 0.0, 0.0, 0.0);
+
+    return OUT;
+}
