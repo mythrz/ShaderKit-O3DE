@@ -1,0 +1,82 @@
+{
+  "description": "Pixel Palette material with shadows.",
+  "version": 1,
+  "shaders": [
+    { "file": "./Ex.shader" },
+    { "file": "./Ex_Depth.shader" },
+    { "file": "./Ex_Shadow.shader" }
+  ],
+  "propertyLayout": {
+    "groups": [
+      { "id": "textures", "displayName": "Textures" },
+      { "id": "settings", "displayName": "Settings" },
+      { "id": "lighting", "displayName": "Lighting" }
+    ],
+    "properties": {
+      "textures": [
+        {
+          "id": "baseColour",
+          "displayName": "Colours",
+          "type": "Image",
+          "connection": { "type": "ShaderInput", "id": "m_baseColour" }
+        },
+        {
+          "id": "attributesTexture",
+          "displayName": "Attributes",
+          "type": "Image",
+          "connection": { "type": "ShaderInput", "id": "m_attributesTexture" }
+        },
+        {
+          "id": "emissionTexture",
+          "displayName": "Emission",
+          "type": "Image",
+          "connection": { "type": "ShaderInput", "id": "m_emissionTexture" }
+        }
+      ],
+      "settings": [
+        {
+          "id": "animationSpeed",
+          "displayName": "Animation Speed",
+          "type": "Float",
+          "defaultValue": 0.2,
+          "connection": { "type": "ShaderInput", "id": "m_animationSpeed" }
+        },
+        {
+          "id": "neonStrength",
+          "displayName": "Neon Strength",
+          "type": "Float",
+          "defaultValue": 1.0,
+          "connection": { "type": "ShaderInput", "id": "m_neonStrength" }
+        }
+      ],
+      "lighting": [
+        {
+          "id": "enableShadows",
+          "displayName": "Enable Shadows",
+          "description": "Allows this material to cast shadows.",
+          "type": "Bool",
+          "defaultValue": true,
+          "connection": { "type": "ShaderOption", "id": "o_enableShadows" }
+        },
+        {
+          "id": "receiveShadows",
+          "displayName": "Receive Shadows",
+          "description": "Allows this material to receive shadows from directional lights.",
+          "type": "Bool",
+          "defaultValue": true,
+          "connection": { "type": "ShaderOption", "id": "o_receiveShadows" }
+        },
+        {
+          "id": "shadowStrength",
+          "displayName": "Shadow Strength",
+          "description": "Controls how dark the received shadows are.",
+          "type": "Float",
+          "defaultValue": 1.0,
+          "min": 0.0,
+          "max": 1.0,
+          "connection": { "type": "ShaderInput", "id": "m_shadowStrength" }
+        }
+      ]
+    }
+  }
+}
